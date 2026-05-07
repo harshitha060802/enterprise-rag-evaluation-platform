@@ -23,6 +23,8 @@ Implemented so far:
 - Combine semantic and BM25 results with Reciprocal Rank Fusion
 - Rerank hybrid candidates with a cross-encoder
 - Save main pipeline traces to `logs/rag_pipeline_traces.jsonl`
+- Create a small golden retrieval dataset
+- Run a retrieval evaluation with a minimum passing score
 
 ## Project Structure
 
@@ -42,3 +44,37 @@ production-rag/
   chroma_db/         # Local Chroma vector database
   requirements.txt
   README.md
+  ```
+
+## Evaluation
+
+The project includes a small golden dataset for retrieval evaluation:
+
+```text
+evals/golden_dataset.csv
+```
+
+The current evaluation checks whether the hybrid + reranked retrieval pipeline returns the expected source document for each question.
+
+Run:
+
+```powershell
+python evals/eval_retrieval.py
+```
+
+The script prints pass/fail results and exits with an error if the retrieval score drops below `0.80`.
+
+## Next Steps
+
+Phase 2:
+
+- Add a final answer-generation script
+- Enforce citation-only answers
+- Add cleaner config management
+
+Phase 3:
+
+- Create a larger golden Q&A dataset
+- Evaluate faithfulness and answer relevancy with Ragas
+- Add CI/CD quality gates
+
