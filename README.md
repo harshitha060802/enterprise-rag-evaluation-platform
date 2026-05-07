@@ -22,6 +22,7 @@ Implemented so far:
 - Search with BM25 keyword retrieval
 - Combine semantic and BM25 results with Reciprocal Rank Fusion
 - Rerank hybrid candidates with a cross-encoder
+- Save main pipeline traces to `logs/rag_pipeline_traces.jsonl`
 
 ## Project Structure
 
@@ -34,6 +35,7 @@ production-rag/
     bm25_search.py   # BM25 keyword search
     hybrid_search.py # Semantic + BM25 retrieval with RRF
     rerank_search.py # Hybrid retrieval + cross-encoder reranking
+    rag_pipeline.py  # Main pipeline: semantic + BM25 + RRF + reranking + trace logs
     ask.py           # Retrieves evidence and logs results
   evals/             # Future evaluation datasets and scripts
   logs/              # Retrieval logs
