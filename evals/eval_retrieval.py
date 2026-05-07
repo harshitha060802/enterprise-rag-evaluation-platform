@@ -6,6 +6,7 @@ from pathlib import Path
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 SRC_DIR = PROJECT_ROOT / "src"
 GOLDEN_DATASET_PATH = PROJECT_ROOT / "evals" / "golden_dataset.csv"
+REPORT_PATH = PROJECT_ROOT / "evals" / "retrieval_report.md"
 
 sys.path.append(str(SRC_DIR))
 
@@ -40,6 +41,11 @@ def evaluate_question(question, expected_source_hint):
 def main():
     total = 0
     passed_count = 0
+    report_lines = [
+        "# Retrieval Evaluation Report",
+        "",
+    ]
+
 
     with GOLDEN_DATASET_PATH.open("r", encoding="utf-8") as file:
         reader = csv.DictReader(file)
@@ -66,10 +72,26 @@ def main():
             for source_id in retrieved_source_ids:
                 print(f"- {source_id}")
             print()
+            report_lines.append(f"## {status}: {question}")
+            report_lines.append("")
+            report_lines.append(f"Expected source hint: `{expected_source_hint}`")
+            report_lines.append("")
+            report_lines.append("Retrieved sources:")
+            report_lines.extend([f"- `{source_id}`" for source_id in retrieved_source_ids])
+            report_lines.append("")
+
 
     score = passed_count / total if total else 0
 
     print(f"Retrieval score: {score:.2f} ({passed_count}/{total})")
+    report_lines.append(f"## Final Score")
+    report_lines.append("")
+    report_lines.append(f"Retrieval score: `{score:.2f}` ({passed_count}/{total})")
+    report_lines.append("")
+
+    REPORT_PATH.write_text("\n".join(report_lines), encoding="utf-8")
+    print(f"Report written to {REPORT_PATH}")
+
 
     if score < 0.80:
         raise SystemExit("Retrieval evaluation failed.")
