@@ -28,11 +28,13 @@ Implemented so far:
 - Run a retrieval evaluation with a minimum passing score
 - Generate a retrieval evaluation report and chart
 - Add a GitHub Actions workflow for retrieval evaluation
+- Provide a Streamlit chatbot interface
 
 ## Project Structure
 
 ```text
 production-rag/
+  app.py              # Streamlit chatbot interface
   data/                # Source documents
   src/
     ingest.py          # Loads, chunks, embeds, and stores documents
@@ -187,6 +189,15 @@ Answer traces are saved to:
 
 ```text
 logs/answer_traces.jsonl
+```
+## Streamlit Chatbot
+
+The project includes a simple chatbot-style interface built with Streamlit.
+
+Run:
+
+```powershell
+streamlit run app.py
 ```
 
 ## Evaluation
