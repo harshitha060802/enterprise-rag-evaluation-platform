@@ -1,0 +1,6 @@
+question,expected_source_hint,expected_answer_hint
+What is RAG?,rag_notes.md,RAG retrieves relevant external documents before generating an answer.
+What is semantic search?,rag_notes.md,Semantic search means searching by meaning instead of only exact keywords.
+What is ChromaDB?,rag_notes.md,ChromaDB is a lightweight vector database that can run locally.
+Why is metadata useful in RAG?,rag_notes.md,Metadata stores source information like filename or page number for citations.
+What are the main steps in a basic RAG pipeline?,rag_notes.md,A basic RAG pipeline includes document ingestion, chunking, embedding, and retrieval.
