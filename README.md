@@ -6,7 +6,7 @@ The goal is to start with a simple document retrieval pipeline and gradually upg
 
 ## Current Status
 
-Phase 1 is in progress.
+Phase 1 and the core of Phase 2 are implemented.
 
 Implemented so far:
 
@@ -18,6 +18,10 @@ Implemented so far:
 - Search documents using semantic similarity
 - Attach source metadata and page-level citations
 - Save retrieval logs to `logs/retrieval_logs.jsonl`
+- Build a BM25 keyword index
+- Search with BM25 keyword retrieval
+- Combine semantic and BM25 results with Reciprocal Rank Fusion
+- Rerank hybrid candidates with a cross-encoder
 
 ## Project Structure
 
@@ -26,7 +30,10 @@ production-rag/
   data/              # Source documents
   src/
     ingest.py        # Loads, chunks, embeds, and stores documents
-    search.py        # Searches the vector database
+    search.py        # Semantic vector search
+    bm25_search.py   # BM25 keyword search
+    hybrid_search.py # Semantic + BM25 retrieval with RRF
+    rerank_search.py # Hybrid retrieval + cross-encoder reranking
     ask.py           # Retrieves evidence and logs results
   evals/             # Future evaluation datasets and scripts
   logs/              # Retrieval logs
