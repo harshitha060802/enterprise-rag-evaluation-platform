@@ -64,6 +64,24 @@ python evals/eval_retrieval.py
 
 The script prints pass/fail results and exits with an error if the retrieval score drops below `0.80`.
 
+It also writes a Markdown report:
+
+```text
+evals/retrieval_report.md
+```
+
+A simple chart can be generated with:
+
+```powershell
+python evals/plot_eval_report.py
+```
+
+The chart is saved to:
+
+```text
+evals/retrieval_score.png
+```
+
 ## Next Steps
 
 Phase 2:
