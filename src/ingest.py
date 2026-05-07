@@ -1,5 +1,8 @@
+import pickle
 import shutil
 from pathlib import Path
+
+from rank_bm25 import BM25Okapi
 
 from langchain_community.document_loaders import PyPDFLoader, TextLoader
 from langchain_chroma import Chroma
@@ -10,6 +13,7 @@ from langchain_text_splitters import RecursiveCharacterTextSplitter
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 DATA_DIR = PROJECT_ROOT / "data"
 CHROMA_DIR = PROJECT_ROOT / "chroma_db"
+BM25_INDEX_PATH = PROJECT_ROOT / "bm25_index.pkl"
 
 
 def load_documents():
@@ -36,6 +40,21 @@ def load_documents():
         documents.extend(loaded_docs)
 
     return documents
+def tokenize(text):
+    return text.lower().split()
+
+
+def save_bm25_index(chunks):
+    tokenized_chunks = [tokenize(chunk.page_content) for chunk in chunks]
+    bm25 = BM25Okapi(tokenized_chunks)
+
+    index_data = {
+        "bm25": bm25,
+        "documents": chunks,
+    }
+
+    with BM25_INDEX_PATH.open("wb") as file:
+        pickle.dump(index_data, file)
 
 def main():
     if CHROMA_DIR.exists():
@@ -62,7 +81,8 @@ def main():
             chunk.metadata["chunk_id"] = f"{source}::page-{page + 1}::chunk-{index}"
         else:
             chunk.metadata["chunk_id"] = f"{source}::chunk-{index}"
-
+    print("Saving BM25 keyword index...")
+    save_bm25_index(chunks)
 
     print("Creating local embeddings...")
     embeddings = HuggingFaceEmbeddings(

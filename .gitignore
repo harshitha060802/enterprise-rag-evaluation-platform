@@ -8,6 +8,8 @@ __pycache__/
 
 # Local vector database
 chroma_db/
+bm25_index.pkl
+
 
 # Logs
 logs/
