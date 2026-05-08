@@ -166,6 +166,20 @@ streamlit run app.py
 
 The app lets users ask questions, receive cited answers, and inspect the retrieved source chunks behind each answer.
 
+The Streamlit app also includes:
+
+- password protection for deployed demos
+- PDF and Markdown upload from the sidebar
+- one-click index rebuilding after upload
+
+For local password testing, add this to `.env`:
+
+```text
+APP_PASSWORD=your_demo_password_here
+```
+
+If `APP_PASSWORD` is not set, the app runs without password protection and shows a warning.
+
 ## Retrieval Modes
 
 ### Semantic Search
@@ -262,17 +276,44 @@ Recommended account settings:
 - set project budget alerts
 - keep private document data sharing disabled
 
+## Streamlit Community Cloud Deployment
+
+Streamlit Community Cloud can host the app for free, but OpenAI API calls still use the API credits for the key configured in the deployed app.
+
+To deploy safely:
+
+1. Go to `https://share.streamlit.io`.
+2. Sign in with GitHub.
+3. Create a new app from this repository.
+4. Select branch `main`.
+5. Set the main file path to:
+
+```text
+app.py
+```
+
+6. In the app's secrets settings, add:
+
+```toml
+OPENAI_API_KEY = "your_openai_api_key_here"
+APP_PASSWORD = "your_demo_password_here"
+```
+
+Do not put these values in the GitHub repository.
+
+The password prevents random visitors from using the deployed app and spending OpenAI credits.
+
 ## Current Limitations
 
 - The golden dataset is intentionally small and should be expanded.
 - The current evaluation focuses on retrieval quality, not full answer faithfulness.
 - Ragas-based faithfulness and answer relevancy evaluation is planned as a future upgrade.
-- Public deployment requires storing the OpenAI API key as a platform secret.
+- Public deployment requires storing the OpenAI API key and app password as platform secrets.
 
 ## Future Improvements
 
 - Add Ragas faithfulness and answer relevancy scoring
 - Add stricter citation validation
 - Expand the golden dataset to 50-200 Q&A pairs
-- Deploy the Streamlit app publicly
-- Add support for document upload from the UI
+- Add per-user rate limits for deployed demos
+- Add file cleanup controls for uploaded documents

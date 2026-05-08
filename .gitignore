@@ -21,3 +21,4 @@ Thumbs.db
 
 # Local/private source documents
 data/*.pdf
+data/uploaded_*
