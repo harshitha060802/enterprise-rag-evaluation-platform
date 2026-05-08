@@ -67,6 +67,10 @@ ChromaDB                  Exact-Term Retrieval
                 v
       Streamlit Chat Interface
 ```
+## Demo
+
+![Streamlit chatbot demo](assets/rag-chatbot-demo.png)
+
 
 ## Tech Stack
 
