@@ -1,53 +1,108 @@
-# Production RAG Project
+# Enterprise RAG Evaluation Platform
 
-This project is a local Retrieval Augmented Generation (RAG) system built in phases.
+A production-style Retrieval Augmented Generation system focused on reliable retrieval, grounded answers, citations, and automated evaluation.
 
-The goal is to start with a simple document retrieval pipeline and gradually upgrade it into a production-style RAG system with hybrid retrieval, reranking, evaluation, and CI/CD quality gates.
+This project goes beyond a basic RAG chatbot. It implements a full retrieval pipeline with PDF/Markdown ingestion, semantic search, BM25 keyword search, Reciprocal Rank Fusion, cross-encoder reranking, cited OpenAI answer generation, Streamlit UI, and CI-based retrieval quality checks.
 
-## Current Status
+## Why This Project Exists
 
-Phase 1, Phase 2, and the foundation of Phase 3 are implemented.
+Most beginner RAG demos stop after vector search. That works for simple questions, but it often fails in real systems where users ask about exact terms, document-specific facts, IDs, names, policies, or technical details.
 
-Implemented so far:
+This project is designed around the production problems that make RAG systems harder:
 
-- Load Markdown documents from `data/`
-- Load PDF documents from `data/`
-- Split documents into overlapping chunks
-- Create local embeddings with `sentence-transformers/all-MiniLM-L6-v2`
-- Store embeddings in ChromaDB
-- Search documents using semantic similarity
-- Attach source metadata and page-level citations
-- Save retrieval logs to `logs/retrieval_logs.jsonl`
-- Build a BM25 keyword index
-- Search with BM25 keyword retrieval
-- Combine semantic and BM25 results with Reciprocal Rank Fusion
-- Rerank hybrid candidates with a cross-encoder
-- Save main pipeline traces to `logs/rag_pipeline_traces.jsonl`
-- Generate final cited answers using the OpenAI API
-- Create a small golden retrieval dataset
-- Run a retrieval evaluation with a minimum passing score
-- Generate a retrieval evaluation report and chart
-- Add a GitHub Actions workflow for retrieval evaluation
-- Provide a Streamlit chatbot interface
+- retrieving the right evidence, not just similar-looking text
+- combining semantic search with keyword search
+- reranking retrieved chunks before sending them to the LLM
+- forcing answers to cite source chunks
+- logging traces for debugging
+- evaluating retrieval quality with a golden dataset
+- failing CI when retrieval quality drops
+
+## Key Features
+
+- Ingests Markdown and PDF documents
+- Splits documents into overlapping chunks
+- Stores embeddings in ChromaDB
+- Builds a BM25 keyword index
+- Combines semantic and keyword retrieval with Reciprocal Rank Fusion
+- Reranks hybrid candidates with a cross-encoder
+- Generates concise cited answers using the OpenAI API
+- Provides a Streamlit chatbot interface
+- Saves retrieval and answer traces
+- Includes a golden retrieval dataset
+- Generates an evaluation report and chart
+- Runs retrieval evaluation in GitHub Actions
+
+## Architecture
+
+```text
+Documents
+   |
+   v
+PDF/Markdown Loaders
+   |
+   v
+Chunking with Overlap
+   |
+   +--------------------------+
+   |                          |
+   v                          v
+Semantic Embeddings       BM25 Keyword Index
+ChromaDB                  Exact-Term Retrieval
+   |                          |
+   +------------+-------------+
+                |
+                v
+      Reciprocal Rank Fusion
+                |
+                v
+       Cross-Encoder Reranker
+                |
+                v
+       Top Grounding Context
+                |
+                v
+        OpenAI Cited Answer
+                |
+                v
+      Streamlit Chat Interface
+```
+
+## Tech Stack
+
+- Python
+- LangChain
+- ChromaDB
+- Sentence Transformers
+- BM25 with `rank-bm25`
+- Cross-encoder reranking
+- OpenAI API
+- Streamlit
+- Matplotlib
+- GitHub Actions
 
 ## Project Structure
 
 ```text
 production-rag/
-  app.py              # Streamlit chatbot interface
-  data/                # Source documents
+  app.py                # Streamlit chatbot interface
+  data/                 # Public sample documents
   src/
-    ingest.py          # Loads, chunks, embeds, and stores documents
-    search.py          # Semantic vector search
-    bm25_search.py     # BM25 keyword search
-    hybrid_search.py   # Semantic + BM25 retrieval with RRF
-    rerank_search.py   # Hybrid retrieval + cross-encoder reranking
-    rag_pipeline.py    # Main pipeline: semantic + BM25 + RRF + reranking + trace logs
-    generate_answer.py # OpenAI final answer generation with citations
-    ask.py             # Retrieves evidence and logs results
-  evals/               # Evaluation dataset, report, chart, and scripts
-  logs/                # Local retrieval and answer logs
-  chroma_db/           # Local Chroma vector database
+    ingest.py           # Loads, chunks, embeds, and indexes documents
+    search.py           # Semantic vector search
+    bm25_search.py      # BM25 keyword search
+    hybrid_search.py    # Semantic + BM25 retrieval with RRF
+    rerank_search.py    # Hybrid retrieval + cross-encoder reranking
+    rag_pipeline.py     # Main retrieval pipeline with trace logging
+    generate_answer.py  # OpenAI final answer generation with citations
+    ask.py              # Evidence retrieval helper
+  evals/
+    golden_dataset.csv  # Golden retrieval questions
+    eval_retrieval.py   # Retrieval quality evaluation
+    retrieval_report.md # Generated evaluation report
+    retrieval_score.png # Evaluation chart
+  .github/workflows/
+    retrieval-eval.yml  # CI retrieval quality gate
   requirements.txt
   README.md
 ```
@@ -73,37 +128,45 @@ Create a `.env` file in the project root:
 OPENAI_API_KEY=your_api_key_here
 ```
 
-The `.env` file is ignored by Git and should not be committed.
+The `.env` file is ignored by Git and should never be committed.
 
-## Ingestion
+## Run The Pipeline
 
-Add documents to the `data/` folder.
+Add `.md` or `.pdf` files to the `data/` folder.
 
-Supported formats:
-
-- `.md`
-- `.pdf`
-
-Run ingestion:
+Build the vector database and BM25 index:
 
 ```powershell
 python src/ingest.py
 ```
 
-This creates:
+Run the full retrieval pipeline:
 
-- a local ChromaDB vector database
-- a BM25 keyword index
+```powershell
+python src/rag_pipeline.py
+```
 
-## Retrieval Methods
+Generate a final cited answer:
 
-The project supports several retrieval modes.
+```powershell
+python src/generate_answer.py
+```
+
+## Streamlit Chatbot
+
+Run the chatbot interface:
+
+```powershell
+streamlit run app.py
+```
+
+The app lets users ask questions, receive cited answers, and inspect the retrieved source chunks behind each answer.
+
+## Retrieval Modes
 
 ### Semantic Search
 
-Semantic search uses embeddings and ChromaDB to find chunks that are similar in meaning to the user question.
-
-Run:
+Uses embeddings and ChromaDB to retrieve chunks that are similar in meaning to the query.
 
 ```powershell
 python src/search.py
@@ -111,25 +174,15 @@ python src/search.py
 
 ### BM25 Keyword Search
 
-BM25 keyword search finds chunks using exact keyword overlap. This is useful for IDs, names, product codes, acronyms, and exact terms.
-
-Run:
+Uses exact keyword matching, which helps with names, IDs, acronyms, product codes, and domain-specific terms.
 
 ```powershell
 python src/bm25_search.py
 ```
 
-### Hybrid Search With RRF
+### Hybrid Search
 
-Hybrid search combines semantic search and BM25 search using Reciprocal Rank Fusion.
-
-Flow:
-
-```text
-semantic results + BM25 results -> RRF merge -> hybrid ranked chunks
-```
-
-Run:
+Combines semantic and BM25 results using Reciprocal Rank Fusion.
 
 ```powershell
 python src/hybrid_search.py
@@ -137,80 +190,21 @@ python src/hybrid_search.py
 
 ### Cross-Encoder Reranking
 
-The reranker takes the top hybrid candidates and scores each query/chunk pair more carefully.
-
-Flow:
-
-```text
-semantic + BM25 -> RRF top candidates -> cross-encoder reranker -> final ranked chunks
-```
-
-Run:
+Reranks the top hybrid candidates by scoring each query/chunk pair more carefully.
 
 ```powershell
 python src/rerank_search.py
 ```
 
-### Main RAG Pipeline
-
-This is the main retrieval pipeline. It runs semantic search, BM25 search, RRF fusion, cross-encoder reranking, and saves a trace log.
-
-Run:
-
-```powershell
-python src/rag_pipeline.py
-```
-
-Trace logs are saved to:
-
-```text
-logs/rag_pipeline_traces.jsonl
-```
-
-## Final Answer Generation
-
-This script runs the full retrieval pipeline and then sends the retrieved context to the OpenAI API to generate a concise cited answer.
-
-Run:
-
-```powershell
-python src/generate_answer.py
-```
-
-The script uses the API key from `.env`:
-
-```text
-OPENAI_API_KEY=your_api_key_here
-```
-
-For cost control, the script uses a small model, retrieves a limited number of chunks, and caps the answer length.
-
-Answer traces are saved to:
-
-```text
-logs/answer_traces.jsonl
-```
-## Streamlit Chatbot
-
-The project includes a simple chatbot-style interface built with Streamlit.
-
-Run:
-
-```powershell
-streamlit run app.py
-```
-
 ## Evaluation
 
-The project includes a small golden dataset for retrieval evaluation:
+The project includes a small golden retrieval dataset:
 
 ```text
 evals/golden_dataset.csv
 ```
 
-The current evaluation checks whether the hybrid + reranked retrieval pipeline returns the expected source document for each question.
-
-Run:
+The evaluation script checks whether the hybrid + reranked pipeline retrieves the expected source document for each question.
 
 ```powershell
 python evals/eval_retrieval.py
@@ -218,67 +212,63 @@ python evals/eval_retrieval.py
 
 The script prints pass/fail results and exits with an error if the retrieval score drops below `0.80`.
 
-It also writes a Markdown report:
+It also writes:
 
 ```text
 evals/retrieval_report.md
-```
-
-A simple chart can be generated with:
-
-```powershell
-python evals/plot_eval_report.py
-```
-
-The chart is saved to:
-
-```text
 evals/retrieval_score.png
 ```
 
-## CI/CD
+## CI Quality Gate
 
-The repository includes a GitHub Actions workflow:
+GitHub Actions runs the retrieval evaluation on every push and pull request:
 
 ```text
 .github/workflows/retrieval-eval.yml
 ```
 
-The workflow installs dependencies, rebuilds indexes, and runs the retrieval evaluation.
+If retrieval quality drops below the threshold, the CI workflow fails.
 
-If the retrieval score drops below the threshold, the workflow fails.
+## Citation Strategy
 
-## Citations
+Each chunk stores metadata such as source filename, page number, and chunk ID.
 
-Each retrieved chunk includes a source ID such as:
+Example source ID:
 
 ```text
 example.pdf::page-2::chunk-5
 ```
 
-The final answer prompt requires citations using the retrieved source IDs.
+The final answer prompt requires the model to answer only from retrieved context and cite the source ID for factual claims.
 
 ## Cost Controls
 
-This project minimizes API usage by:
+The OpenAI answer-generation step is designed to reduce API usage:
 
-- using a small OpenAI model
-- retrieving a limited number of chunks
-- reranking before answer generation
-- sending only the top retrieved context to the LLM
-- capping output length
+- uses a small model
+- retrieves a limited number of chunks
+- reranks before generation
+- sends only the top context to the LLM
+- caps answer length
 
-Recommended account safety settings:
+Recommended account settings:
 
 - keep auto recharge off
 - use a small initial credit amount
 - set project budget alerts
-- do not enable data sharing for private documents
+- keep private document data sharing disabled
 
-## Next Steps
+## Current Limitations
 
+- The golden dataset is intentionally small and should be expanded.
+- The current evaluation focuses on retrieval quality, not full answer faithfulness.
+- Ragas-based faithfulness and answer relevancy evaluation is planned as a future upgrade.
+- Public deployment requires storing the OpenAI API key as a platform secret.
+
+## Future Improvements
+
+- Add Ragas faithfulness and answer relevancy scoring
 - Add stricter citation validation
-- Create a larger golden Q&A dataset
-- Add Ragas faithfulness and answer relevancy evaluation
-- Add a Streamlit chatbot interface
-- Add deployment instructions
+- Expand the golden dataset to 50-200 Q&A pairs
+- Deploy the Streamlit app publicly
+- Add support for document upload from the UI
